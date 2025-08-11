@@ -115,11 +115,28 @@ class _MyHomeState extends State<MyHome> {
     return Scaffold(
       body: ListView(
         children: [
-          ElevatedButton(
-            onPressed: () async {
-              await getIt<Hetu>().eval("metadata.auth.authenticate()");
-            },
-            child: Text("Login"),
+          Wrap(
+            children: [
+              ElevatedButton(
+                onPressed: () async {
+                  await getIt<Hetu>().eval("metadata.auth.authenticate()");
+                },
+                child: Text("Login"),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  await getIt<Hetu>().eval("metadata.core.checkUpdate({version: '1.0.0'}.toJson())");
+                },
+                child: Text("Check Update"),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  final result = await getIt<Hetu>().eval("metadata.core.support");
+                  debugPrint(result.toString());
+                },
+                child: Text("Support"),
+              ),
+            ],
           ),
           Text("User"),
           Wrap(
