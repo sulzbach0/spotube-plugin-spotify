@@ -86,12 +86,23 @@ class SpotifyAuthEndpoint {
     })
 	}
 
-  fun generateTimedOnTimePassword() -> Future {
-		return client.get_req("https://open.spotify.com/api/server-time").then((res) {
+  fun getLatestNuance() -> Future { // Future<{v: int, s: string}>
+    return client.get_req(
+      "https://codeberg.org/sonic-liberation/blubber-junkyard-elitism/raw/branch/main/nuances.json"
+    ).then((res) {
+      var data = JSON.decode(res.data);
+      data.sort((a, b) => b["v"].compareTo(a["v"]))
+      return data.first
+    })
+  }
+
+  fun generateTimedOnTimePassword(secret: string) -> Future {
+		return client.get_req("https://open.spotify.com/api/server-time")
+    .then((res) {
       final timestampSeconds = res.data["serverTime"]
 
       final totp = TOTP(
-        secret: "GMZTINRRGIYTIOJWHE4TOOBRGYZTGNZZGQ3TIMJQGQYTENZUGAYTCOJVHE2DI",
+        secret: secret,
         algorithm: OTPAlgorithm.SHA1,
         digits: 6,
         interval: 30,
@@ -118,11 +129,11 @@ class SpotifyAuthEndpoint {
 		timestamp: DateTime,
 		totp: string,
 		spDc: string,
-    mode: string
+    mode: string,
+    totpVer: int
 	}) -> Future {
     print("Timestamp: ${timestamp}, TOTP: ${totp}, Mode: ${mode}, spDc: ${spDc}")
     final timestampSeconds = (timestamp.millisecondsSinceEpoch / 1000).floor()
-    final totpVer = 27
 		final accessTokenUrl = "https://open.spotify.com/api/token?reason=${mode}&productType=web-player&totp=${totp}&totpServer=${totp}&totpVer=${totpVer}"
 
 		final userAgent = "${DateTime.now().millisecondsSinceEpoch}${Random().nextInt(100) * 1000}${randomBytesFromMath(16)}"
@@ -144,46 +155,27 @@ class SpotifyAuthEndpoint {
   fun credentialsFromCookie(cookies: List) -> Future {
 		final spDc = cookies.where((c) => c["name"] == "sp_dc").first?["value"];
 
-		return generateTimedOnTimePassword().then((totp){
-      return getToken(
-        totp: totp,
-        timestamp: DateTime.now(),
-        spDc: "sp_dc=${spDc};",
-        mode: "transport",
-      ).then((res){
-        // print("Response: ${res.body}, Headers: ${res.headers}");
-        // if ((res.body["accessToken"]?.length ?? 0) != 374) {
-        //   return getToken({
-        //     totp: totp,
-        //     timestamp: DateTime.now(),
-        //     spDc: "sp_dc=${spDc};",
-        //     mode: "init",
-        //   }).then((res){
-        //     if (res.body["accessToken"] == null) {
-        //       print(
-        //         "The access token is only ${res.body["accessToken"]?.length} characters long instead of 374. Your authentication probably doesn't work",
-        //       );
-        //     }
+    return getLatestNuance().then((nuance){
+      return generateTimedOnTimePassword(nuance["s"]).then((totp){
+        return getToken(
+          totp: totp,
+          timestamp: DateTime.now(),
+          spDc: "sp_dc=${spDc};",
+          mode: "transport",
+          totpVer: nuance["v"],
+        ).then((res){
+          if (res.body["accessToken"] == null) {
+            print(
+              "The access token is only ${res.body["accessToken"]?.length} characters long instead of 374. Your authentication probably doesn't work",
+            );
+          }
 
-        //     return {
-        //       cookies: cookies,
-        //       accessToken: res.body["accessToken"],
-        //       expiration: res.body["accessTokenExpirationTimestampMs"],
-        //     }
-        //   })
-        // }
-
-        if (res.body["accessToken"] == null) {
-          print(
-            "The access token is only ${res.body["accessToken"]?.length} characters long instead of 374. Your authentication probably doesn't work",
-          );
-        }
-
-        return {
-          cookies: cookies,
-          accessToken: res.body["accessToken"],
-          expiration: res.body["accessTokenExpirationTimestampMs"],
-        }
+          return {
+            cookies: cookies,
+            accessToken: res.body["accessToken"],
+            expiration: res.body["accessTokenExpirationTimestampMs"],
+          }
+        })
       })
     })
 	}
