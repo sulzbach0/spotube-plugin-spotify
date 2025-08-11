@@ -39,14 +39,17 @@ class ArtistEndpoint {
   }
 
   fun related(id: string, {offset: int, limit: int}) {
-    // TODO: Implement method
-    return Future.value({
-      total: 0,
-      limit: limit ?? 20,
-      nextOffset: (offset ?? 0) + (limit ?? 20),
-      hasMore: false,
-      items: []
-    }.toJson())
+    return client.artist.related(id).then((data) {
+      var artists = Converters.fullArtists(data["artists"])
+
+      return {
+        total: artists.length,
+        limit: limit ?? 20,
+        nextOffset: (offset ?? 0) + (limit ?? 20),
+        hasMore: false,
+        items: artists
+      }.toJson()
+    })
   }
 }
 

@@ -113,8 +113,7 @@ class _MyHomeState extends State<MyHome> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      body: ListView(
         children: [
           ElevatedButton(
             onPressed: () async {
@@ -123,7 +122,7 @@ class _MyHomeState extends State<MyHome> {
             child: Text("Login"),
           ),
           Text("User"),
-          Row(
+          Wrap(
             children: [
               ElevatedButton(
                 onPressed: () async {
@@ -207,7 +206,7 @@ class _MyHomeState extends State<MyHome> {
             ],
           ),
           Text("Tracks"),
-          Row(
+          Wrap(
             children: [
               ElevatedButton(
                 onPressed: () async {
@@ -217,6 +216,15 @@ class _MyHomeState extends State<MyHome> {
                   debugPrint(result.toString());
                 },
                 child: Text("Get Track"),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  final result = await getIt<Hetu>().eval(
+                    "metadata.track.radio('11dFghVXANMlKmJXsNCbNl')",
+                  );
+                  debugPrint(result.toString());
+                },
+                child: Text("Track Radio"),
               ),
               ElevatedButton(
                 onPressed: () async {
@@ -239,7 +247,7 @@ class _MyHomeState extends State<MyHome> {
             ],
           ),
           Text("Playlists"),
-          Row(
+          Wrap(
             children: [
               ElevatedButton(
                 onPressed: () async {
@@ -343,7 +351,7 @@ class _MyHomeState extends State<MyHome> {
             ],
           ),
           Text("Albums"),
-          Row(
+          Wrap(
             children: [
               ElevatedButton(
                 onPressed: () async {
@@ -393,7 +401,7 @@ class _MyHomeState extends State<MyHome> {
             ],
           ),
           Text("Artists"),
-          Row(
+          Wrap(
             children: [
               ElevatedButton(
                 onPressed: () async {
@@ -412,6 +420,15 @@ class _MyHomeState extends State<MyHome> {
                   debugPrint(result.toString());
                 },
                 child: Text("Artist Top Tracks"),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  final result = await getIt<Hetu>().eval(
+                    "metadata.artist.related('0TnOYISbd1XYRBk9myaseg')",
+                  );
+                  debugPrint(result.toString());
+                },
+                child: Text("Related artists"),
               ),
               ElevatedButton(
                 onPressed: () async {
@@ -443,7 +460,7 @@ class _MyHomeState extends State<MyHome> {
             ],
           ),
           Text("Search"),
-          Row(
+          Wrap(
             children: [
               ElevatedButton(
                 onPressed: () async {
@@ -493,7 +510,7 @@ class _MyHomeState extends State<MyHome> {
             ],
           ),
           Text("Browse"),
-          Row(
+          Wrap(
             children: [
               ElevatedButton(
                 onPressed: () async {
