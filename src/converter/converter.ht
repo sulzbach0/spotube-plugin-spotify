@@ -7,7 +7,9 @@ class Converters {
       nextOffset: hasMore ? data["offset"] + data["limit"] : null,
       hasMore: hasMore,
       total: data["total"],
-      items: convertItems(data["items"]),
+      items: convertItems(
+        data["items"].where((item)=> item != null).toList()
+      ),
     }.toJson()
   }
   
@@ -19,6 +21,11 @@ class Converters {
     var modified = []
     
     for(var track in tracks) {
+      if(track == null) {
+        modified.add(null)
+        continue
+      }
+      
       var modifiedTrack = {
         id: track["id"],
         name: track["name"],

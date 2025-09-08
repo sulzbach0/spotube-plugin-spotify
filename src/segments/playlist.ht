@@ -21,7 +21,7 @@ class PlaylistEndpoint {
 
       // Spotify playlists can contain local tracks which do not have an ID and cannot be played
       // We filter them out here to avoid issues in the client
-      paginated["items"] = paginated["items"].where((item) => item["id"] != null).toList()
+      paginated["items"] = paginated["items"].where((item) => item != null && item["id"] != null).toList()
 
       return paginated
     })
