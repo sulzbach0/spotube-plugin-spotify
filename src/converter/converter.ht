@@ -25,7 +25,7 @@ class Converters {
         externalUri: track["external_urls"]["spotify"] ?? "https://open.spotify.com/track/${track["id"]}",
         explicit: track["explicit"] ?? false,
         durationMs: track["duration_ms"] ?? 0,
-        isrc: track["external_ids"]["isrc"],
+        isrc: track["external_ids"]["isrc"] ?? "",
         artists: simpleArtists(track["artists"]),
         album: simpleAlbums([track["album"]])[0],
       }.toJson()
