@@ -239,6 +239,9 @@ class SpotifyAuthEndpoint {
 
   /// Método para usar token pessoal do Spotify Web API
   fun setPersonalToken(accessToken: string, refreshToken: string = null, clientId: string = null, clientSecret: string = null) -> Future {
+    print("[setPersonalToken] Definindo token pessoal...")
+    print("[setPersonalToken] Token: ${accessToken.substring(0, 10)}...")
+    
     final personalCredentials = {
       accessToken: accessToken,
       refreshToken: refreshToken,
@@ -257,6 +260,7 @@ class SpotifyAuthEndpoint {
       refreshPersonalToken()
     })
     
+    print("[setPersonalToken] Token pessoal definido com sucesso!")
     controller.add({type: "login"}.toJson());
   }
 

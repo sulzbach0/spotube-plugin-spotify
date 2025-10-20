@@ -139,6 +139,24 @@ class _MyHomeState extends State<MyHome> {
               ),
               ElevatedButton(
                 onPressed: () async {
+                  // Testar se o token está funcionando
+                  final result = await getIt<Hetu>().eval("metadata.auth.isAuthenticated()");
+                  debugPrint("Está autenticado: $result");
+                  
+                  if (result == true) {
+                    // Testar uma requisição simples
+                    try {
+                      final testResult = await getIt<Hetu>().eval("metadata.search.tracks('test', offset: 0, limit: 1)");
+                      debugPrint("Teste de busca funcionou: $testResult");
+                    } catch (e) {
+                      debugPrint("Erro no teste de busca: $e");
+                    }
+                  }
+                },
+                child: Text("Testar Token"),
+              ),
+              ElevatedButton(
+                onPressed: () async {
                   await getIt<Hetu>().eval("metadata.core.checkUpdate({version: '1.0.0'}.toJson())");
                 },
                 child: Text("Check Update"),
