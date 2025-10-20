@@ -125,6 +125,20 @@ class _MyHomeState extends State<MyHome> {
               ),
               ElevatedButton(
                 onPressed: () async {
+                  // Token pessoal com renovação automática
+                  await getIt<Hetu>().eval("""
+                    metadata.auth.setPersonalToken(
+                      'BQB8D0NoMWx2EZdkBfk9zWdv4mRP4jQYd0OIjEJWV_drq9PJpX3hi7gDXAHOmVeNPCSWAPQahLEQZumKTGGHupT90gO6czLFNIzKn0EtJ8m22SbOyPR6UWR05p3zbjj9HMbXuOHrHZo',
+                      null, // refreshToken (não temos)
+                      'efdd522883a048b8adbbce3b4a103ec0', // clientId
+                      '717450b003f84e08bacc3cc460c2409c'  // clientSecret
+                    )
+                  """);
+                },
+                child: Text("Usar Token Pessoal (Auto-Renovação)"),
+              ),
+              ElevatedButton(
+                onPressed: () async {
                   await getIt<Hetu>().eval("metadata.core.checkUpdate({version: '1.0.0'}.toJson())");
                 },
                 child: Text("Check Update"),

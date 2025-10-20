@@ -194,6 +194,12 @@ class SpotifyAuthEndpoint {
 	}
 
 	fun refreshCredentials() -> Future {
+		// Se for token pessoal, usar refresh token
+		if (credentials["isPersonalToken"] == true) {
+			return refreshPersonalToken();
+		}
+		
+		// Se for autenticação por cookie, usar método original
 		if (credentials["cookies"] == null) {
 			print(
 				"[refreshCredentials] No cookie found. Cannot refresh credentials.",
@@ -225,11 +231,103 @@ class SpotifyAuthEndpoint {
     return webview.open()
   }
 
-	fun logout() {
+  fun logout() {
 		credentials = null;
 		LocalStorage.remove("credentials");
 		controller.add({type: "logout"}.toJson());
 	}
+
+  /// Método para usar token pessoal do Spotify Web API
+  fun setPersonalToken(accessToken: string, refreshToken: string = null, clientId: string = null, clientSecret: string = null) -> Future {
+    final personalCredentials = {
+      accessToken: accessToken,
+      refreshToken: refreshToken,
+      clientId: clientId,
+      clientSecret: clientSecret,
+      expiration: DateTime.now().add(Duration(hours: 1)).millisecondsSinceEpoch,
+      isPersonalToken: true
+    }
+    
+    LocalStorage.setString("credentials", JSON.encode(personalCredentials.toJson()));
+    credentials = personalCredentials;
+    
+    // Configurar renovação automática para tokens pessoais
+    _timer?.cancel()
+    _timer = Timer.periodic(Duration(minutes: 50), (cancel) {
+      refreshPersonalToken()
+    })
+    
+    controller.add({type: "login"}.toJson());
+  }
+
+  /// Método para renovar token pessoal
+  fun refreshPersonalToken() -> Future {
+    // Se tem refresh token, usar refresh token flow
+    if (credentials["refreshToken"] != null) {
+      return client.post_req(
+        "https://accounts.spotify.com/api/token",
+        data: {
+          "grant_type": "refresh_token",
+          "refresh_token": credentials["refreshToken"]
+        }.toJson(),
+        options: RequestOptions(
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded"
+          }.toJson()
+        )
+      ).then((res) {
+        final newCredentials = {
+          accessToken: res.data["access_token"],
+          refreshToken: res.data["refresh_token"] ?? credentials["refreshToken"],
+          clientId: credentials["clientId"],
+          clientSecret: credentials["clientSecret"],
+          expiration: DateTime.now().add(Duration(seconds: res.data["expires_in"])).millisecondsSinceEpoch,
+          isPersonalToken: true
+        }
+        
+        LocalStorage.setString("credentials", JSON.encode(newCredentials.toJson()));
+        credentials = newCredentials;
+        
+        print("[refreshPersonalToken] Token renovado com refresh token");
+        controller.add({type: "refreshed"}.toJson());
+      })
+    }
+    // Se tem client credentials, usar client credentials flow
+    else if (credentials["clientId"] != null && credentials["clientSecret"] != null) {
+      return client.post_req(
+        "https://accounts.spotify.com/api/token",
+        data: {
+          "grant_type": "client_credentials",
+          "client_id": credentials["clientId"],
+          "client_secret": credentials["clientSecret"]
+        }.toJson(),
+        options: RequestOptions(
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded"
+          }.toJson()
+        )
+      ).then((res) {
+        final newCredentials = {
+          accessToken: res.data["access_token"],
+          refreshToken: credentials["refreshToken"],
+          clientId: credentials["clientId"],
+          clientSecret: credentials["clientSecret"],
+          expiration: DateTime.now().add(Duration(seconds: res.data["expires_in"])).millisecondsSinceEpoch,
+          isPersonalToken: true
+        }
+        
+        LocalStorage.setString("credentials", JSON.encode(newCredentials.toJson()));
+        credentials = newCredentials;
+        
+        print("[refreshPersonalToken] Token renovado com client credentials");
+        controller.add({type: "refreshed"}.toJson());
+      })
+    }
+    else {
+      print("[refreshPersonalToken] Não é possível renovar: faltam credenciais");
+      return;
+    }
+  }
 }
 
 export { SpotifyAuthEndpoint }
